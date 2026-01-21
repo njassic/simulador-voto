@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Simulador de Voto</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef1f4;
+    text-align: center;
+    padding: 30px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    max-width: 750px;
+    margin: auto;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+}
+
+.titulo {
+    font-size: 28px;
+    font-weight: bold;
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.senado { background-color: #1e88e5; }
+.camara { background-color: #6d4c41; }
+
+.subtitulo {
+    font-size: 16px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+/* LOGOS */
+.logos {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.logo {
+    position: relative;
+    border: 4px solid transparent;
+    border-radius: 10px;
+    padding: 6px;
+    cursor: pointer;
+}
+
+.logo img { width: 90px; }
+
+.logo.seleccionado { border-color: green; }
+
+.marca-x {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 60px;
+    color: red;
+    font-weight: bold;
+    display: none;
+    pointer-events: none;
+}
+
+.logo.seleccionado .marca-x { display: block; }
+
+/* NÚMEROS */
+.numeros {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.numero {
+    position: relative;
+    border: 2px solid #999;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    background: #f9f9f9;
+    font-size: 18px;
+}
+
+.numero.seleccionado {
+    background: #c8e6c9;
+    border-color: green;
+}
+
+.numero .marca-x {
+    font-size: 40px;
+}
+
+.numero.seleccionado .marca-x {
+    display: block;
+}
+
+/* RESULTADOS */
+.resultado {
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.recordatorio {
+    margin-top: 10px;
+    color: #6a1b9a;
+    font-weight: bold;
+}
+
+.puntos {
+    margin-top: 15px;
+    color: green;
+    font-size: 20px;
+}
+
+button {
+    padding: 14px 35px;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <div id="titulo" class="titulo senado">VOTO SENADO</div>
+    <div id="subtitulo" class="subtitulo">🟦 El tarjetón de Senado es de color azul</div>
+
+    <p><strong>Marca el logo:</strong></p>
+    <div class="logos">
+        <div class="logo" onclick="seleccionarLogo('MIRA', this)">
+            <img src="mira.jpg">
+            <div class="marca-x">❌</div>
+        </div>
+        <div class="logo" onclick="seleccionarLogo('otro1', this)">
+            <img src="otro1.png">
+            <div class="marca-x">❌</div>
+        </div>
+        <div class="logo" onclick="seleccionarLogo('otro2', this)">
+            <img src="otro2.png">
+            <div class="marca-x">❌</div>
+        </div>
+        <div class="logo" onclick="seleccionarLogo('otro3', this)">
+            <img src="otro3.jpg">
+            <div class="marca-x">❌</div>
+        </div>
+    </div>
+
+    <p><strong>Marca el número:</strong></p>
+    <div id="numeros" class="numeros"></div>
+
+    <button onclick="votar()">Confirmar voto</button>
+
+    <div class="resultado" id="resultado"></div>
+    <div class="recordatorio" id="recordatorio"></div>
+    <div class="puntos">Puntos: <span id="puntos">0</span></div>
+
+</div>
+
+<script>
+let etapa = "senado";
+let puntos = 0;
+let logoSeleccionado = "";
+let numeroSeleccionado = null;
+
+function seleccionarLogo(nombre, elemento) {
+    logoSeleccionado = nombre;
+    document.querySelectorAll('.logo').forEach(l => l.classList.remove('seleccionado'));
+    elemento.classList.add('seleccionado');
+}
+
+function generarNumeros(inicio, fin) {
+    const cont = document.getElementById("numeros");
+    cont.innerHTML = "";
+    for (let i = inicio; i <= fin; i++) {
+        const div = document.createElement("div");
+        div.className = "numero";
+        div.innerHTML = i + '<div class="marca-x">❌</div>';
+        div.onclick = () => seleccionarNumero(i, div);
+        cont.appendChild(div);
+    }
+}
+
+function seleccionarNumero(valor, elemento) {
+    numeroSeleccionado = valor;
+    document.querySelectorAll('.numero').forEach(n => n.classList.remove('seleccionado'));
+    elemento.classList.add('seleccionado');
+}
+
+function votar() {
+    const res = document.getElementById("resultado");
+    const rec = document.getElementById("recordatorio");
+
+    rec.innerText = "";
+
+    if (!logoSeleccionado || numeroSeleccionado === null) {
+        res.innerText = "⚠️ Debes marcar un logo y un número";
+        return;
+    }
+
+    if (etapa === "senado") {
+        if (logoSeleccionado === "MIRA" && numeroSeleccionado === 2) {
+            puntos += 10;
+            res.innerText = "✅ Voto correcto para Senado";
+            setTimeout(cambiarACamara, 1500);
+        } else {
+            res.innerText = "❌ Error en el voto de Senado";
+            rec.innerText = "🎨 Recuerda: los colores de la coalición son azul, rojo y violeta";
+        }
+    } else {
+        if (logoSeleccionado === "MIRA" && numeroSeleccionado === 102) {
+            puntos += 10;
+            res.innerText = "✅ Voto correcto para Cámara por el Valle";
+            setTimeout(reiniciarASenado, 1500);
+        } else {
+            res.innerText = "❌ Error en el voto de Cámara";
+            rec.innerText = "🎨 Recuerda: los colores de la coalición son azul, rojo y violeta";
+        }
+    }
+
+    document.getElementById("puntos").innerText = puntos;
+}
+
+function reset() {
+    logoSeleccionado = "";
+    numeroSeleccionado = null;
+    document.querySelectorAll('.logo, .numero').forEach(e => e.classList.remove('seleccionado'));
+}
+
+function cambiarACamara() {
+    etapa = "camara";
+    document.getElementById("titulo").innerText = "VOTO CÁMARA POR EL VALLE";
+    document.getElementById("titulo").className = "titulo camara";
+    document.getElementById("subtitulo").innerText = "🟫 El tarjetón de Cámara es de color café";
+    document.getElementById("resultado").innerText = "";
+    document.getElementById("recordatorio").innerText = "";
+    reset();
+    generarNumeros(100, 140);
+}
+
+function reiniciarASenado() {
+    etapa = "senado";
+    document.getElementById("titulo").innerText = "VOTO SENADO";
+    document.getElementById("titulo").className = "titulo senado";
+    document.getElementById("subtitulo").innerText = "🟦 El tarjetón de Senado es de color azul";
+    document.getElementById("resultado").innerText = "";
+    document.getElementById("recordatorio").innerText = "";
+    reset();
+    generarNumeros(1, 50);
+}
+
+generarNumeros(1, 50);
+</script>
+
+</body>
+</html>
